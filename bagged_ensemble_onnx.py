@@ -1,4 +1,5 @@
 
+import argparse
 import os
 import pickle
 from os.path import isdir, isfile, join
@@ -22,7 +23,14 @@ from operators import argmax_operator, mean_operator, softmax_operator
 from utils import model_dir_tools
 
 
-class bagged_model_onnx():
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_dir",type=str)
+    args = parser.parse_args()
+    return args
+
+
+class bagged_model2onnx():
 
     """
     This class is used to load the bagged model and convert it to onnx format.
@@ -30,11 +38,10 @@ class bagged_model_onnx():
     Parameters
     ----------
     model_path : str
-        Path to the bagged_model in autogulon directory.
-    
+        Path to the bagged_model in autogulon directory. e.g. 'AutogluonModels/ag_model_2021-05-20_15-00-00/models/LightGBMLarge'
     """
     def __init__(self,model_dir) -> None:
-
+        #To initiate this 
         self.bagged_model_path, self.childs_path = model_dir_tools(model_dir)
         self.bagged_model = self.load_model(self.bagged_model_path)
         self.childs = [self.bagged_model.load_child(child) for child in self.bagged_model.models]
@@ -219,18 +226,6 @@ class bagged_model_onnx():
             return res
 
 if __name__ == "__main__":
-    model_path = r'E:\bagged_onnx\autogluon_EIA_first_cls\models\LightGBMXT_BAG_L1'
-    onnx_path = 'lgbm_bagged_model.onnx'
-    predictor = TabularPredictor.load('autogluon_EIA_first_cls')
-    df = pd.read_csv(r'E:\bagged_onnx\EIA_onnx.csv')
-    labels = np.where(df['label']==-1,0,df['label'])
-    # labels = df['label'].tolist()
-    df=df.drop(columns=['label'])
-    np_data = df.to_numpy()
-    bagged_model = bagged_model_onnx(model_path)
+    args = get_args()
+    bagged_model = bagged_model2onnx(args.model_dir)
     bagged_model.transform()
-    prediction = bagged_model.test(np_data)
-    predictor_prediction = predictor.predict(df,model='LightGBMXT_BAG_L1')
-    # predictor_prediction.to_csv('predictor_output.csv')
-    # predictor_labels = np.where(predictor_prediction==-1,0,predictor_prediction)
-    # print(prediction - predictor_labels)
